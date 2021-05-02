@@ -15,10 +15,14 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('json.response')->group(function () {
-    Route::get('/user', [UserController::class, 'index']);
+Route::prefix('v1')->middleware('json.response')->group(function () {
+    Route::prefix('user')->group(function () {
+        Route::get('/{id}', [UserController::class, 'show']);
+        Route::post('/search', [UserController::class, 'search']);
+    });
 });
 
 Route::prefix('v1/user')->group(function () {
     Route::post('/join', [UserController::class, 'store']);
+    Route::post('/login', [UserController::class, 'login']);
 });

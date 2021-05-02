@@ -11,17 +11,6 @@ use Illuminate\Support\Str;
 class UserController extends Controller
 {
     /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index()
-    {
-        $allUser = User::all();
-        return $allUser;
-    }
-
-    /**
      * Store a newly created resource in storage.
      *
      * @param \Illuminate\Http\Request $request
@@ -50,6 +39,77 @@ class UserController extends Controller
         return $response;
     }
 
+    public function login(Request $request)
+    {
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'email' => 'required|string|email|max:255|unique:users',
+                'password' => 'required|string|min:10|confirmed',
+            ]
+        );
+        if ($validator->fails()) {
+            return response(['errors' => $validator->errors()->all()], 422);
+        }
+        $user = User::where('email', $request->email)->first();
+        if ($user) {
+            if (Hash::check($request->password, $user->password)) {
+                $token = $user->createToken('Access Token')->accessToken;
+                $response = ['token' => $token];
+                return response($response, 200);
+            } else {
+                $response = ["message" => "Password mismatch"];
+                return response($response, 422);
+            }
+        } else {
+            $response = ["message" => 'User does not exist'];
+            return response($response, 422);
+        }
+    }
+
+    public function search(Request $request)
+    {
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'name' => 'string|max:20',
+                'email' => 'string|email|max:255',
+                'page' => 'integer|min:1',
+                'limit' => 'integer|min:1',
+            ]
+        );
+        if ($validator->fails()) {
+            return response(['errors' => $validator->errors()->all()], 422);
+        }
+
+        $query = User::query();
+
+        if ($request->name) {
+            $query->orWhere('name', 'like', '%' . $request->name . '%');
+        }
+
+        if ($request->email) {
+            $query->orWhere('email', '=', $request->email);
+        }
+        $limit = 2;
+        if ($request->limit) {
+            $limit = $request->limit;
+        }
+
+        $page = 0;
+        if ($request->page) {
+            $page = ($request->page - 1) * $limit;
+        }
+        $query->offset($page)->limit($limit)->get();
+
+        $resultUser = $query->get();
+        if (empty($resultUser)) {
+            $response = ["message" => 'User does not exist'];
+            return response($response, 422);
+        }
+        return $resultUser;
+    }
+
     /**
      * Display the specified resource.
      *
@@ -58,7 +118,12 @@ class UserController extends Controller
      */
     public function show($id)
     {
-        //
+        $user = User::find($id);
+        if (empty($user)) {
+            $response = ["message" => 'User does not exist'];
+            return response($response, 422);
+        }
+        return $user;
     }
 
     /**
