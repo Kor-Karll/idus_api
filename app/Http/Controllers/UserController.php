@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Order;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -84,7 +86,7 @@ class UserController extends Controller
             return response(['errors' => $validator->errors()->all()], 422);
         }
 
-        $query = User::query();
+        $query = User::with('latestOrder');
 
         if ($request->name) {
             $query->orWhere('name', 'like', '%' . $request->name . '%');
@@ -102,13 +104,13 @@ class UserController extends Controller
         if ($request->page) {
             $page = ($request->page - 1) * $limit;
         }
-        $query->offset($page)->limit($limit)->get();
+        $query->offset($page)->limit($limit);
 
         $resultUser = $query->get();
         if (empty($resultUser)) {
-            $response = ["message" => 'User does not exist'];
-            return response($response, 422);
+            return response([], 200);
         }
+
         return $resultUser;
     }
 
