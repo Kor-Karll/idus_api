@@ -11,9 +11,9 @@ class OrderController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index($customer_id)
     {
-        $orderList = Order::where('customer_id', '=', auth()->user()->id)->get();
+        $orderList = Order::where('customer_id', '=', $customer_id)->get();
         return $orderList;
     }
 }

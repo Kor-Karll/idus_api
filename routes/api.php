@@ -30,7 +30,7 @@ Route::middleware(['json.response', 'cors',])->prefix('v1')->group(function () {
     });
 
     Route::middleware('auth:api')->prefix('order')->group(function () {
-        Route::get('/', [OrderController::class, 'index']);
+        Route::get('/{customer_id}', [OrderController::class, 'index']);
     });
 });
 
