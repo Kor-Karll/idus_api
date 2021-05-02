@@ -10,12 +10,6 @@ use Illuminate\Support\Str;
 
 class UserController extends Controller
 {
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\Response
-     */
     public function store(Request $request)
     {
         $validator = Validator::make(
@@ -36,7 +30,7 @@ class UserController extends Controller
         $user = User::create($request->toArray());
         $token = $user->createToken('Access Token')->accessToken;
         $response = ['token' => $token];
-        return $response;
+        return response($response, 200);
     }
 
     public function login(Request $request)
@@ -44,8 +38,8 @@ class UserController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                'email' => 'required|string|email|max:255|unique:users',
-                'password' => 'required|string|min:10|confirmed',
+                'email' => 'required|string|email|max:255',
+                'password' => 'required|string|min:10',
             ]
         );
         if ($validator->fails()) {
@@ -65,6 +59,14 @@ class UserController extends Controller
             $response = ["message" => 'User does not exist'];
             return response($response, 422);
         }
+    }
+
+    public function logout(Request $request)
+    {
+        $token = $request->user()->token();
+        $token->revoke();
+        $response = ['message' => 'You have been successfully logged out!'];
+        return response($response, 200);
     }
 
     public function search(Request $request)
